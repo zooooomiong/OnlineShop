@@ -114,3 +114,7 @@ MEDIA_ROOT = MEDIA_DIR
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Auth User Model
+AUTH_USER_MODEL = "account.User"
