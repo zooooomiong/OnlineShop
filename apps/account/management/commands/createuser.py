@@ -1,7 +1,13 @@
 from typing import Any
 from django.core.management.base import BaseCommand, CommandParser
 from account.models import User
-from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from account.validator import (
+    validate_username,
+    validate_first_name,
+    validate_last_name,
+    validate_password,
+)
 
 
 class Command(BaseCommand):
@@ -24,37 +30,84 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> str | None:
-        username = options.get("username") or input("Username: ")
-        email = options.get("email") or input("Email: ")
-        password = options.get("password") or input("Password: ")
-        first_name = options.get("first_name") or input("Firstname: ")
-        last_name = options.get("last_name") or input("Lastname: ")
-        is_provider = options.get("is_provider", False) or bool(input("Is Provider: "))
-        is_customer = options.get("is_customer", False) or bool(input("Is customer: "))
+        try:
+            username = options.get("username", "")
+            while not username:
+                username = input("Username: ")
+                try:   
+                    validate_username(username)
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"{e}"))
+                    username = ""
+                
+                if User.objects.filter(username=username).exists():
+                    self.stdout.write(
+                        self.style.ERROR("Username already exists (must be unique) try another username.")
+                    )
+                    username = ""
 
-        # Validation for required fields
-        if not username or not email or not password:
-            raise ValidationError("Username, email, and password are required.")
+                            
+            
+            email = options.get("email", "")
+            while not email:
+                email = input("Email: ")
+                try:   
+                    validate_email(email)
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"{e}"))
+                    email = ""
+            
+            password = options.get("password", "")
+            while not password:
+                password = input("Password: ")
+                try:
+                    validate_password(password)
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"{e}"))
+                    password = ""
+            
+            first_name = options.get("first_name", "")
+            while not first_name:
+                first_name = input("first_name: ")
+                try:
+                    validate_first_name(first_name)
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"{e}"))
+                    first_name = ""
+            
+            last_name = options.get("last_name", "")
+            while not last_name:
+                last_name = input("last_name: ")
+                try:
+                    validate_last_name(last_name)
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"{e}"))
+                    last_name = ""
+                    
+            is_provider = options.get("is_provider", False) or bool(input("Is Provider: "))
+            is_customer = options.get("is_customer", False) or bool(input("Is customer: "))
 
-        # Check for unique username
-        if User.objects.filter(username=username).exists():
-            raise ValidationError("Username already exists (must be unique).")
-
-        # Create the user
-        user = User.objects.create_superuser(
-            username=username,
-            password=password,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            is_provider=is_provider,
-            is_customer=is_customer,
-        )
-        user.save()
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"User created.\nUsername: {username} -- Email: {email}\n"
-                f"First Name: {first_name} -- Last Name: {last_name}\n"
-                f"Is Provider: {is_provider} -- Is Customer: {is_customer}"
+    
+           
+            # Create the user
+            user = User.objects.create_superuser(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                is_provider=is_provider,
+                is_customer=is_customer,
             )
-        )
+            user.save()
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"User created.\nUsername: {username} -- Email: {email}\n"
+                    f"First Name: {first_name} -- Last Name: {last_name}\n"
+                    f"Is Provider: {is_provider} -- Is Customer: {is_customer}"
+                )
+            )
+
+        
+        except EOFError:
+            print("CTRL+C")

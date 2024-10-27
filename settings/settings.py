@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     "apps.account",
     # dependencies
     "rest_framework",
-    "django_extension",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
