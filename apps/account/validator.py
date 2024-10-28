@@ -47,7 +47,7 @@ def validate_first_name(first_name, with_raise=True):
 def validate_last_name(last_name, with_raise=True):
     if (predict_prob([last_name]))[0] > 0.7:
         if with_raise:
-            raise ValidationError(_("The last name has offensive word."))
+            raise ValidationError([_("The last name has offensive word.")])
         return [_("The last name has offensive word")]
 
 
@@ -65,3 +65,12 @@ def validate_phone_number(phone_number, with_raise=True):
         raise ValidationError(errors)
     return errors
     
+def validate_email(email, with_raise=True):
+    import re
+    regex = re.compile(r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\[[\t -Z^-~]*])")
+
+    if not re.fullmatch(regex, email):
+        if with_raise:
+            raise ValidationError([_("Invalid email.")])
+
+        return [_("Invalid email.")]
